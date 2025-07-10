@@ -1,0 +1,1018 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>자동 정산 가계부</title>
+    <style>
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 10px;
+            background: #f8fafc;
+        }
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            overflow-x: auto;
+        }
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px;
+            text-align: center;
+        }
+        table { 
+            width: 100%; 
+            border-collapse: collapse;
+            font-size: 13px;
+        }
+        th { 
+            background: #f1f5f9;
+            padding: 8px 6px;
+            font-weight: 600;
+            border: 1px solid #e2e8f0;
+            text-align: center;
+            position: sticky;
+            top: 0;
+        }
+        td { 
+            padding: 6px;
+            border: 1px solid #e2e8f0;
+            text-align: center;
+        }
+        .date-col { width: 80px; font-weight: 600; }
+        .place-col { width: 120px; }
+        .detail-col { width: 100px; }
+        .amount-col { width: 80px; font-family: monospace; }
+        .payer-col { width: 70px; }
+        .people-col { width: 150px; }
+        .split-col { width: 70px; font-family: monospace; }
+        
+        /* 인원 체크박스 스타일 */
+        .checkbox-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+            justify-content: center;
+        }
+        .checkbox-item {
+            display: flex;
+            align-items: center;
+            gap: 2px;
+            font-size: 11px;
+        }
+        
+        /* 결과 표시 스타일 */
+        .hyoseon { background-color: #EBF3FF; color: #1E40AF; }
+        .gihyeon { background-color: #E0F7F0; color: #047857; }
+        .younghui { background-color: #FFF4E6; color: #C2410C; }
+        .sakang { background-color: #F3E8FF; color: #7C3AED; }
+        
+        .settlement-text {
+            font-size: 10px;
+            line-height: 1.2;
+        }
+        
+        .total-amount { background: #fee2e2; font-weight: bold; }
+        .equal-split { background: #dcfce7; }
+        
+        /* 입력 필드 스타일 */
+        input[type="text"], input[type="number"] {
+            width: 100%;
+            border: none;
+            padding: 4px;
+            text-align: center;
+            background: transparent;
+        }
+        input[type="checkbox"] {
+            transform: scale(0.9);
+        }
+        select {
+            width: 100%;
+            border: none;
+            padding: 4px;
+            background: transparent;
+        }
+        
+        .summary {
+            background: #f8fafc;
+            padding: 15px;
+            border-top: 2px solid #e5e7eb;
+        }
+        .summary h3 {
+            margin: 0 0 10px 0;
+            color: #374151;
+        }
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 10px;
+        }
+        .summary-card {
+            background: white;
+            padding: 10px;
+            border-radius: 6px;
+            border-left: 4px solid;
+        }
+        .total-card { border-left-color: #6366f1; }
+        .hyoseon-card { border-left-color: #3b82f6; }
+        .gihyeon-card { border-left-color: #10b981; }
+        .younghui-card { border-left-color: #f59e0b; }
+        .sakang-card { border-left-color: #8b5cf6; }
+        
+        /* 인원 태그 스타일 */
+        .member-tag {
+            background: rgba(255,255,255,0.25);
+            padding: 4px 8px;
+            border-radius: 15px;
+            font-size: 13px;
+            display: flex;
+            align-items: center;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>💰 자동 정산 가계부</h1>
+            <p style="margin: 5px 0 0 0; opacity: 0.9;">인원 체크하면 자동으로 금액 분할!</p>
+            
+            <!-- 인원 관리 섹션 -->
+            <div style="margin-top: 15px; padding: 15px; background: rgba(255,255,255,0.15); border-radius: 8px;">
+                <h3 style="margin: 0 0 10px 0; font-size: 16px;">👥 인원 관리</h3>
+                <div style="display: flex; flex-wrap: wrap; gap: 10px; align-items: center; justify-content: center;">
+                    <div id="membersList" style="display: flex; flex-wrap: wrap; gap: 8px; align-items: center;">
+                        <!-- 기본 인원들 -->
+                        <div class="member-tag" data-member="효선">
+                            효선 <button onclick="removeMember('효선')" style="margin-left: 5px; background: none; border: none; color: white; cursor: pointer;">×</button>
+                        </div>
+                        <div class="member-tag" data-member="기현">
+                            기현 <button onclick="removeMember('기현')" style="margin-left: 5px; background: none; border: none; color: white; cursor: pointer;">×</button>
+                        </div>
+                        <div class="member-tag" data-member="영휘">
+                            영휘 <button onclick="removeMember('영휘')" style="margin-left: 5px; background: none; border: none; color: white; cursor: pointer;">×</button>
+                        </div>
+                        <div class="member-tag" data-member="사강">
+                            사강 <button onclick="removeMember('사강')" style="margin-left: 5px; background: none; border: none; color: white; cursor: pointer;">×</button>
+                        </div>
+                    </div>
+                    <div style="display: flex; gap: 5px; align-items: center;">
+                        <input type="text" id="newMemberInput" placeholder="인원을 추가해주세요" style="padding: 5px 8px; border: none; border-radius: 4px; font-size: 14px; width: 120px; background-color:white">
+                        <button onclick="addMember()" style="background: #10b981; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; font-size: 14px;">+ 추가</button>
+                    </div>
+                </div>
+                
+                <!-- 데이터 관리 섹션 -->
+                <div style="margin-top: 10px; padding: 10px; background: rgba(255,255,255,0.1); border-radius: 6px;">
+                    <div style="display: flex; flex-wrap: wrap; gap: 8px; align-items: center; justify-content: center; font-size: 13px;">
+                        <button onclick="saveData()" style="background: #3b82f6; color: white; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer;">💾 저장</button>
+                        <button onclick="loadData()" style="background: #8b5cf6; color: white; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer;">📥 불러오기</button>
+                        <button onclick="exportData()" style="background: #059669; color: white; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer;">📤 내보내기</button>
+                        <button onclick="importData()" style="background: #dc2626; color: white; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer;">📥 가져오기</button>
+                        <button onclick="clearData()" style="background: #6b7280; color: white; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer;">🗑️ 초기화</button>
+                        <input type="file" id="fileInput" accept=".json" style="display: none;" onchange="handleFileImport(event)">
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <table id="expenseTable">
+            <thead>
+                <tr>
+                    <th class="date-col">날짜</th>
+                    <th class="place-col">장소</th>
+                    <th class="detail-col">상세내역</th>
+                    <th class="amount-col">총 결제액</th>
+                    <th class="payer-col">결제자</th>
+                    <th class="people-col">참여 인원</th>
+                </tr>
+                <tr id="memberColumns">
+                    <th colspan="6"></th>
+                    <th class="split-col">효선</th>
+                    <th class="split-col">기현</th>
+                    <th class="split-col">영휘</th>
+                    <th class="split-col">사강</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="date-col">
+                        <input type="text" value="06/23" placeholder="MM/DD">
+                    </td>
+                    <td class="place-col">
+                        <input type="text" value="퍼듀 다이닝 코트" placeholder="장소">
+                    </td>
+                    <td class="detail-col">
+                        <input type="text" value="점심" placeholder="내역">
+                    </td>
+                    <td class="amount-col total-amount">
+                        <input type="number" value="13.44" step="0.01" onchange="calculateSplit(this)">
+                    </td>
+                    <td class="payer-col">
+                        <select>
+                            <option value="효선" selected>효선</option>
+                            <option value="기현">기현</option>
+                            <option value="영휘">영휘</option>
+                            <option value="사강">사강</option>
+                        </select>
+                    </td>
+                    <td class="people-col">
+                        <div class="checkbox-group">
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="h1" checked onchange="calculateSplit(this)">
+                                <label for="h1">효선</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="g1" onchange="calculateSplit(this)">
+                                <label for="g1">기현</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="y1" onchange="calculateSplit(this)">
+                                <label for="y1">영휘</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="s1" onchange="calculateSplit(this)">
+                                <label for="s1">사강</label>
+                            </div>
+                        </div>
+                    </td>
+                    <td class="split-col hyoseon equal-split" id="hyoseon1">$13.44</td>
+                    <td class="split-col gihyeon" id="gihyeon1">-</td>
+                    <td class="split-col younghui" id="younghui1">-</td>
+                    <td class="split-col sakang" id="sakang1">-</td>
+                </tr>
+                
+                <tr>
+                    <td class="date-col">
+                        <input type="text" value="06/23" placeholder="MM/DD">
+                    </td>
+                    <td class="place-col">
+                        <input type="text" value="타겟" placeholder="장소">
+                    </td>
+                    <td class="detail-col">
+                        <input type="text" value="쇼핑" placeholder="내역">
+                    </td>
+                    <td class="amount-col total-amount">
+                        <input type="number" value="27.89" step="0.01" onchange="calculateSplit(this)">
+                    </td>
+                    <td class="payer-col">
+                        <select>
+                            <option value="효선" selected>효선</option>
+                            <option value="기현">기현</option>
+                            <option value="영휘">영휘</option>
+                            <option value="사강">사강</option>
+                        </select>
+                    </td>
+                    <td class="people-col">
+                        <div class="checkbox-group">
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="h2" checked onchange="calculateSplit(this)">
+                                <label for="h2">효선</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="g2" checked onchange="calculateSplit(this)">
+                                <label for="g2">기현</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="y2" onchange="calculateSplit(this)">
+                                <label for="y2">영휘</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="s2" onchange="calculateSplit(this)">
+                                <label for="s2">사강</label>
+                            </div>
+                        </div>
+                    </td>
+                    <td class="split-col hyoseon equal-split" id="hyoseon2">$13.95</td>
+                    <td class="split-col gihyeon equal-split" id="gihyeon2">$13.95</td>
+                    <td class="split-col younghui" id="younghui2">-</td>
+                    <td class="split-col sakang" id="sakang2">-</td>
+                </tr>
+                
+                <tr>
+                    <td class="date-col">
+                        <input type="text" value="06/24" placeholder="MM/DD">
+                    </td>
+                    <td class="place-col">
+                        <input type="text" value="판다 익스프레스" placeholder="장소">
+                    </td>
+                    <td class="detail-col">
+                        <input type="text" value="점심" placeholder="내역">
+                    </td>
+                    <td class="amount-col total-amount">
+                        <input type="number" value="12.52" step="0.01" onchange="calculateSplit(this)">
+                    </td>
+                    <td class="payer-col">
+                        <select>
+                            <option value="효선" selected>효선</option>
+                            <option value="기현">기현</option>
+                            <option value="영휘">영휘</option>
+                            <option value="사강">사강</option>
+                        </select>
+                    </td>
+                    <td class="people-col">
+                        <div class="checkbox-group">
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="h3" checked onchange="calculateSplit(this)">
+                                <label for="h3">효선</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="g3" checked onchange="calculateSplit(this)">
+                                <label for="g3">기현</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="y3" onchange="calculateSplit(this)">
+                                <label for="y3">영휘</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="s3" onchange="calculateSplit(this)">
+                                <label for="s3">사강</label>
+                            </div>
+                        </div>
+                    </td>
+                    <td class="split-col hyoseon equal-split" id="hyoseon3">$6.26</td>
+                    <td class="split-col gihyeon equal-split" id="gihyeon3">$6.26</td>
+                    <td class="split-col younghui" id="younghui3">-</td>
+                    <td class="split-col sakang" id="sakang3">-</td>
+                </tr>
+                
+                <!-- 새 행 추가 버튼용 빈 행 -->
+                <tr>
+                    <td colspan="10" style="text-align: center; padding: 15px; background: #f9fafb;">
+                        <button onclick="addNewRow()" style="background: #3b82f6; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer;">+ 새 항목 추가</button>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+        
+        <div class="summary">
+            <h3>📊 월말 정산 요약</h3>
+            <div class="summary-grid">
+                <div class="summary-card total-card">
+                    <div style="font-size: 18px; font-weight: bold;" id="totalAmount">$53.85</div>
+                    <div style="color: #6b7280; font-size: 14px;">총 지출</div>
+                </div>
+                <div class="summary-card hyoseon-card">
+                    <div style="font-size: 16px; font-weight: bold; color: #1E40AF;" id="hyoseonTotal">$33.65</div>
+                    <div style="color: #6b7280; font-size: 14px;">효선 분담</div>
+                </div>
+                <div class="summary-card gihyeon-card">
+                    <div style="font-size: 16px; font-weight: bold; color: #047857;" id="gihyeonTotal">$20.21</div>
+                    <div style="color: #6b7280; font-size: 14px;">기현 분담</div>
+                </div>
+                <div class="summary-card younghui-card">
+                    <div style="font-size: 16px; font-weight: bold; color: #C2410C;" id="younghuiTotal">$0.00</div>
+                    <div style="color: #6b7280; font-size: 14px;">영휘 분담</div>
+                </div>
+                <div class="summary-card sakang-card">
+                    <div style="font-size: 16px; font-weight: bold; color: #7C3AED;" id="sakangTotal">$0.00</div>
+                    <div style="color: #6b7280; font-size: 14px;">사강 분담</div>
+                </div>
+            </div>
+            
+            <div style="margin-top: 15px; padding: 10px; background: white; border-radius: 6px;">
+                <strong>💸 정산 결과:</strong>
+                <div id="finalSettlement" style="margin-top: 5px; font-family: monospace;">
+                    기현이 효선에게 $20.21 줘야 함
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 전역 변수로 현재 멤버 목록 관리
+        let currentMembers = ['효선', '기현', '영휘', '사강'];
+        
+        // 멤버 추가 함수
+        function addMember() {
+            const input = document.getElementById('newMemberInput');
+            const newMember = input.value.trim();
+            
+            if (!newMember) {
+                alert('인원 이름을 입력해주세요.');
+                return;
+            }
+            
+            if (currentMembers.includes(newMember)) {
+                alert('이미 존재하는 인원입니다.');
+                return;
+            }
+            
+            currentMembers.push(newMember);
+            input.value = '';
+            updateMemberUI();
+            updateTableStructure();
+        }
+        
+        // 멤버 제거 함수
+        function removeMember(memberName) {
+            if (currentMembers.length <= 1) {
+                alert('최소 1명의 인원은 있어야 합니다.');
+                return;
+            }
+            
+            currentMembers = currentMembers.filter(member => member !== memberName);
+            updateMemberUI();
+            updateTableStructure();
+        }
+        
+        // 멤버 UI 업데이트
+        function updateMemberUI() {
+            const membersList = document.getElementById('membersList');
+            membersList.innerHTML = '';
+            
+            currentMembers.forEach(member => {
+                const memberTag = document.createElement('div');
+                memberTag.className = 'member-tag';
+                memberTag.setAttribute('data-member', member);
+                memberTag.innerHTML = `
+                    ${member} 
+                    <button onclick="removeMember('${member}')" style="margin-left: 5px; background: none; border: none; color: white; cursor: pointer;">×</button>
+                `;
+                membersList.appendChild(memberTag);
+            });
+        }
+        
+        // 테이블 구조 업데이트
+        function updateTableStructure() {
+            // 헤더 행 업데이트
+            const memberColumns = document.getElementById('memberColumns');
+            memberColumns.innerHTML = '<th colspan="6"></th>';
+            
+            currentMembers.forEach(member => {
+                const th = document.createElement('th');
+                th.className = 'split-col';
+                th.textContent = member;
+                memberColumns.appendChild(th);
+            });
+            
+            // 모든 데이터 행 업데이트
+            const rows = document.querySelectorAll('#expenseTable tbody tr');
+            rows.forEach((row, rowIndex) => {
+                if (rowIndex >= rows.length - 1) return; // 마지막 버튼 행 제외
+                
+                updateRowStructure(row, rowIndex + 1);
+            });
+            
+            // 요약 섹션 업데이트
+            updateSummaryStructure();
+            
+            // 버튼 행 colspan 동적 조정
+            const buttonRow = document.querySelector('#expenseTable tbody tr:last-child td');
+            if (buttonRow) {
+                buttonRow.colSpan = 6 + currentMembers.length;
+            }
+        }
+        
+        // 개별 행 구조 업데이트
+        function updateRowStructure(row, rowIndex) {
+            // 기존 분담금 셀들 제거
+            const cellsToRemove = row.querySelectorAll('.split-col');
+            cellsToRemove.forEach(cell => cell.remove());
+            
+            // 참여 인원 체크박스 업데이트
+            const peopleCell = row.querySelector('.people-col .checkbox-group');
+            if (peopleCell) {
+                // 기존 체크된 상태 저장
+                const existingChecked = [];
+                const existingCheckboxes = peopleCell.querySelectorAll('input[type="checkbox"]');
+                existingCheckboxes.forEach((checkbox, index) => {
+                    if (checkbox.checked) {
+                        const labelText = checkbox.nextElementSibling?.textContent;
+                        if (labelText) {
+                            existingChecked.push(labelText);
+                        }
+                    }
+                });
+                
+                peopleCell.innerHTML = '';
+                
+                currentMembers.forEach((member, index) => {
+                    const checkboxItem = document.createElement('div');
+                    checkboxItem.className = 'checkbox-item';
+                    const isChecked = existingChecked.includes(member) ? 'checked' : '';
+                    checkboxItem.innerHTML = `
+                        <input type="checkbox" id="${member.toLowerCase().charAt(0)}${rowIndex}" ${isChecked} onchange="calculateSplit(this)">
+                        <label for="${member.toLowerCase().charAt(0)}${rowIndex}">${member}</label>
+                    `;
+                    peopleCell.appendChild(checkboxItem);
+                });
+            }
+            
+            // 결제자 셀렉트 옵션 업데이트
+            const payerSelect = row.querySelector('.payer-col select');
+            if (payerSelect) {
+                const selectedValue = payerSelect.value;
+                payerSelect.innerHTML = '';
+                
+                currentMembers.forEach(member => {
+                    const option = document.createElement('option');
+                    option.value = member;
+                    option.textContent = member;
+                    if (member === selectedValue) option.selected = true;
+                    payerSelect.appendChild(option);
+                });
+                
+                // 선택된 값이 삭제된 멤버였다면 첫 번째 멤버로 설정
+                if (!currentMembers.includes(selectedValue)) {
+                    payerSelect.value = currentMembers[0];
+                }
+            }
+            
+            // 새로운 분담금 셀들 추가
+            currentMembers.forEach(member => {
+                const splitCell = document.createElement('td');
+                splitCell.className = `split-col ${member.toLowerCase()}`;
+                splitCell.id = `${member.toLowerCase()}${rowIndex}`;
+                splitCell.textContent = '-';
+                row.appendChild(splitCell);
+            });
+            
+            // 분할 계산 실행
+            setTimeout(() => {
+                const amountInput = row.querySelector('input[type="number"]');
+                if (amountInput && amountInput.value) {
+                    calculateSplit(amountInput);
+                }
+            }, 10);
+        }
+        
+        // 요약 섹션 구조 업데이트
+        function updateSummaryStructure() {
+            const summaryGrid = document.querySelector('.summary-grid');
+            summaryGrid.innerHTML = `
+                <div class="summary-card total-card">
+                    <div style="font-size: 18px; font-weight: bold;" id="totalAmount">$0.00</div>
+                    <div style="color: #6b7280; font-size: 14px;">총 지출</div>
+                </div>
+            `;
+            
+            // 각 멤버별 카드 추가
+            currentMembers.forEach((member, index) => {
+                const colors = ['#1E40AF', '#047857', '#C2410C', '#7C3AED', '#DC2626', '#059669', '#D97706', '#7C3AED'];
+                const cardDiv = document.createElement('div');
+                cardDiv.className = `summary-card ${member.toLowerCase()}-card`;
+                cardDiv.innerHTML = `
+                    <div style="font-size: 16px; font-weight: bold; color: ${colors[index % colors.length]};" id="${member.toLowerCase()}Total">$0.00</div>
+                    <div style="color: #6b7280; font-size: 14px;">${member} 분담</div>
+                `;
+                summaryGrid.appendChild(cardDiv);
+            });
+            
+            updateSummary();
+        }
+
+        function calculateSplit(element) {
+            const row = element.closest('tr');
+            const rowIndex = Array.from(row.parentNode.children).indexOf(row) + 1;
+            
+            const totalAmount = parseFloat(row.querySelector('input[type="number"]').value) || 0;
+            const checkboxes = row.querySelectorAll('input[type="checkbox"]');
+            
+            let participantCount = 0;
+            let participants = [];
+            
+            checkboxes.forEach((checkbox, index) => {
+                if (checkbox.checked && currentMembers[index]) {
+                    participantCount++;
+                    participants.push(currentMembers[index]);
+                }
+            });
+            
+            const splitAmount = participantCount > 0 ? (totalAmount / participantCount) : 0;
+            
+            // 개별 분담금 업데이트
+            currentMembers.forEach((member, index) => {
+                const cell = document.getElementById(member.toLowerCase() + rowIndex);
+                if (cell) {
+                    if (checkboxes[index] && checkboxes[index].checked && participantCount > 0) {
+                        cell.textContent = '$' + splitAmount.toFixed(2);
+                        cell.classList.add('equal-split');
+                    } else {
+                        cell.textContent = '-';
+                        cell.classList.remove('equal-split');
+                    }
+                }
+            });``
+            
+            updateSummary();
+        }
+        
+        function updateSummary() {
+            const rows = document.querySelectorAll('#expenseTable tbody tr');
+            let totals = {total: 0};
+            
+            // 각 멤버별 합계 초기화
+            currentMembers.forEach(member => {
+                totals[member.toLowerCase()] = 0;
+            });
+            
+            rows.forEach((row, index) => {
+                if (index >= rows.length - 1) return; // 마지막 추가 버튼 행 제외
+                
+                const totalInput = row.querySelector('input[type="number"]');
+                if (totalInput) {
+                    totals.total += parseFloat(totalInput.value) || 0;
+                }
+                
+                currentMembers.forEach(member => {
+                    const cell = document.getElementById(member.toLowerCase() + (index + 1));
+                    if (cell && cell.textContent !== '-') {
+                        const amount = parseFloat(cell.textContent.replace('$', '')) || 0;
+                        totals[member.toLowerCase()] += amount;
+                    }
+                });
+            });
+            
+            // 요약 업데이트
+            document.getElementById('totalAmount').textContent = '$' + totals.total.toFixed(2);
+            
+            currentMembers.forEach(member => {
+                const totalElement = document.getElementById(member.toLowerCase() + 'Total');
+                if (totalElement) {
+                    totalElement.textContent = '$' + totals[member.toLowerCase()].toFixed(2);
+                }
+            });
+            
+            // 최종 정산 계산 (첫 번째 멤버가 주로 결제했다고 가정)
+            let finalText = '정산 완료';
+            if (currentMembers.length > 1) {
+                const calculations = [];
+                const firstMember = currentMembers[0];
+                
+                for (let i = 1; i < currentMembers.length; i++) {
+                    const member = currentMembers[i];
+                    const owes = totals[member.toLowerCase()];
+                    if (owes > 0) {
+                        calculations.push(`${member}이 ${firstMember}에게 $${owes.toFixed(2)} 줘야 함`);
+                    }
+                }
+                
+                if (calculations.length > 0) {
+                    finalText = calculations.join('<br>');
+                }
+            }
+            
+            document.getElementById('finalSettlement').innerHTML = finalText;
+        }
+        
+        function addNewRow() {
+            const tbody = document.querySelector('#expenseTable tbody');
+            const newRowIndex = tbody.children.length; // 마지막 버튼 행 포함해서 계산
+            
+            const newRow = document.createElement('tr');
+            
+            // 기본 셀들 생성
+            let rowHTML = `
+                <td class="date-col">
+                    <input type="text" placeholder="MM/DD">
+                </td>
+                <td class="place-col">
+                    <input type="text" placeholder="장소">
+                </td>
+                <td class="detail-col">
+                    <input type="text" placeholder="내역">
+                </td>
+                <td class="amount-col total-amount">
+                    <input type="number" step="0.01" onchange="calculateSplit(this)">
+                </td>
+                <td class="payer-col">
+                    <select>
+            `;
+            
+            currentMembers.forEach(member => {
+                rowHTML += `<option value="${member}">${member}</option>`;
+            });
+            
+            rowHTML += `
+                    </select>
+                </td>
+                <td class="people-col">
+                    <div class="checkbox-group">
+            `;
+            
+            currentMembers.forEach((member, index) => {
+                rowHTML += `
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="${member.toLowerCase().charAt(0)}${newRowIndex}" onchange="calculateSplit(this)">
+                            <label for="${member.toLowerCase().charAt(0)}${newRowIndex}">${member}</label>
+                        </div>
+                `;
+            });
+            
+            rowHTML += `
+                    </div>
+                </td>
+            `;
+            
+            // 각 멤버별 분담금 셀 추가
+            currentMembers.forEach(member => {
+                rowHTML += `<td class="split-col ${member.toLowerCase()}" id="${member.toLowerCase()}${newRowIndex}">-</td>`;
+            });
+            
+            newRow.innerHTML = rowHTML;
+            
+            // 마지막 버튼 행 앞에 삽입
+            tbody.insertBefore(newRow, tbody.lastElementChild);
+        }
+        
+        // Enter 키로 멤버 추가
+        document.addEventListener('DOMContentLoaded', function() {
+            loadData(); // 페이지 로드 시 자동으로 데이터 불러오기
+            
+            // 기존 행들에 대해 계산 실행
+            setTimeout(() => {
+                const existingRows = document.querySelectorAll('#expenseTable tbody tr:not(:last-child)');
+                existingRows.forEach(row => {
+                    const amountInput = row.querySelector('input[type="number"]');
+                    if (amountInput && amountInput.value) {
+                        calculateSplit(amountInput);
+                    }
+                });
+            }, 100);
+            
+            document.getElementById('newMemberInput').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    addMember();
+                }
+            });
+            
+            // 데이터 변경 시 자동 저장 (3초 후)
+            let autoSaveTimeout;
+            function scheduleAutoSave() {
+                clearTimeout(autoSaveTimeout);
+                autoSaveTimeout = setTimeout(() => {
+                    saveData(true); // true = 자동저장 모드
+                }, 3000);
+            }
+            
+            // 입력 필드 변경 감지
+            document.addEventListener('input', scheduleAutoSave);
+            document.addEventListener('change', scheduleAutoSave);
+        });
+        
+        // 데이터 저장 함수
+        function saveData(isAutoSave = false) {
+            try {
+                const data = {
+                    members: currentMembers,
+                    expenses: [],
+                    lastSaved: new Date().toISOString()
+                };
+                
+                // 모든 행의 데이터 수집
+                const rows = document.querySelectorAll('#expenseTable tbody tr');
+                rows.forEach((row, index) => {
+                    if (index >= rows.length - 1) return; // 마지막 버튼 행 제외
+                    
+                    const dateInput = row.querySelector('.date-col input');
+                    const placeInput = row.querySelector('.place-col input');
+                    const detailInput = row.querySelector('.detail-col input');
+                    const amountInput = row.querySelector('.amount-col input');
+                    const payerSelect = row.querySelector('.payer-col select');
+                    const checkboxes = row.querySelectorAll('input[type="checkbox"]');
+                    
+                    // 빈 행은 저장하지 않음
+                    if (!dateInput.value && !placeInput.value && !detailInput.value && !amountInput.value) {
+                        return;
+                    }
+                    
+                    const participants = [];
+                    checkboxes.forEach((checkbox, i) => {
+                        if (checkbox.checked && currentMembers[i]) {
+                            participants.push(currentMembers[i]);
+                        }
+                    });
+                    
+                    data.expenses.push({
+                        date: dateInput.value,
+                        place: placeInput.value,
+                        detail: detailInput.value,
+                        amount: parseFloat(amountInput.value) || 0,
+                        payer: payerSelect.value,
+                        participants: participants
+                    });
+                });
+                
+                localStorage.setItem('expenseData', JSON.stringify(data));
+                
+                if (!isAutoSave) {
+                    alert('데이터가 저장되었습니다!');
+                }
+            } catch (error) {
+                console.error('데이터 저장 중 오류:', error);
+                if (!isAutoSave) {
+                    alert('데이터 저장 중 오류가 발생했습니다.');
+                }
+            }
+        }
+        
+        // 데이터 불러오기 함수
+        function loadData() {
+            try {
+                const savedData = localStorage.getItem('expenseData');
+                if (!savedData) {
+                    updateSummary(); // 저장된 데이터가 없으면 기본 요약만 업데이트
+                    return;
+                }
+                
+                const data = JSON.parse(savedData);
+                
+                // 멤버 목록 복원
+                if (data.members && data.members.length > 0) {
+                    currentMembers = data.members;
+                    updateMemberUI();
+                    updateTableStructure();
+                }
+                
+                // 기존 데이터 행들 제거 (버튼 행 제외)
+                const tbody = document.querySelector('#expenseTable tbody');
+                const existingRows = tbody.querySelectorAll('tr:not(:last-child)');
+                existingRows.forEach(row => row.remove());
+                
+                // 저장된 지출 내역 복원
+                if (data.expenses && data.expenses.length > 0) {
+                    data.expenses.forEach((expense, index) => {
+                        const newRow = createExpenseRow(index + 1, expense);
+                        tbody.insertBefore(newRow, tbody.lastElementChild);
+                    });
+                }
+                
+                updateSummary();
+                
+                if (data.lastSaved) {
+                    const lastSaved = new Date(data.lastSaved);
+                    console.log('마지막 저장:', lastSaved.toLocaleString('ko-KR'));
+                }
+                
+            } catch (error) {
+                console.error('데이터 불러오기 중 오류:', error);
+                alert('데이터 불러오기 중 오류가 발생했습니다.');
+            }
+        }
+        
+        // 지출 행 생성 함수
+        function createExpenseRow(rowIndex, expense) {
+            const newRow = document.createElement('tr');
+            
+            let rowHTML = `
+                <td class="date-col">
+                    <input type="text" value="${expense.date || ''}" placeholder="MM/DD">
+                </td>
+                <td class="place-col">
+                    <input type="text" value="${expense.place || ''}" placeholder="장소">
+                </td>
+                <td class="detail-col">
+                    <input type="text" value="${expense.detail || ''}" placeholder="내역">
+                </td>
+                <td class="amount-col total-amount">
+                    <input type="number" value="${expense.amount || ''}" step="0.01" onchange="calculateSplit(this)">
+                </td>
+                <td class="payer-col">
+                    <select>
+            `;
+            
+            currentMembers.forEach(member => {
+                const selected = member === expense.payer ? 'selected' : '';
+                rowHTML += `<option value="${member}" ${selected}>${member}</option>`;
+            });
+            
+            rowHTML += `
+                    </select>
+                </td>
+                <td class="people-col">
+                    <div class="checkbox-group">
+            `;
+            
+            currentMembers.forEach((member, index) => {
+                const checked = expense.participants && expense.participants.includes(member) ? 'checked' : '';
+                rowHTML += `
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="${member.toLowerCase().charAt(0)}${rowIndex}" ${checked} onchange="calculateSplit(this)">
+                            <label for="${member.toLowerCase().charAt(0)}${rowIndex}">${member}</label>
+                        </div>
+                `;
+            });
+            
+            rowHTML += `
+                    </div>
+                </td>
+            `;
+            
+            // 각 멤버별 분담금 셀 추가
+            currentMembers.forEach(member => {
+                rowHTML += `<td class="split-col ${member.toLowerCase()}" id="${member.toLowerCase()}${rowIndex}">-</td>`;
+            });
+            
+            newRow.innerHTML = rowHTML;
+            
+            // 분할 계산 실행
+            setTimeout(() => {
+                const amountInput = newRow.querySelector('input[type="number"]');
+                if (amountInput) {
+                    calculateSplit(amountInput);
+                }
+            }, 10);
+            
+            return newRow;
+        }
+        
+        // 데이터 내보내기 함수
+        function exportData() {
+            try {
+                const savedData = localStorage.getItem('expenseData');
+                if (!savedData) {
+                    alert('저장된 데이터가 없습니다.');
+                    return;
+                }
+                
+                const data = JSON.parse(savedData);
+                const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `정산내역_${new Date().toISOString().split('T')[0]}.json`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+                
+                alert('데이터가 파일로 내보내기 완료되었습니다!');
+            } catch (error) {
+                console.error('데이터 내보내기 중 오류:', error);
+                alert('데이터 내보내기 중 오류가 발생했습니다.');
+            }
+        }
+        
+        // 데이터 가져오기 함수
+        function importData() {
+            document.getElementById('fileInput').click();
+        }
+        
+        // 파일 가져오기 처리 함수
+        function handleFileImport(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const data = JSON.parse(e.target.result);
+                    
+                    // 데이터 유효성 검사
+                    if (!data.members || !Array.isArray(data.members)) {
+                        throw new Error('올바르지 않은 데이터 형식입니다.');
+                    }
+                    
+                    // localStorage에 저장
+                    localStorage.setItem('expenseData', JSON.stringify(data));
+                    
+                    // 데이터 불러오기
+                    loadData();
+                    
+                    alert('데이터를 성공적으로 가져왔습니다!');
+                } catch (error) {
+                    console.error('파일 가져오기 중 오류:', error);
+                    alert('파일 형식이 올바르지 않습니다.');
+                }
+            };
+            reader.readAsText(file);
+            
+            // 파일 입력 초기화
+            event.target.value = '';
+        }
+        
+        // 데이터 초기화 함수
+        function clearData() {
+            if (!confirm('모든 데이터를 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.')) {
+                return;
+            }
+            
+            try {
+                localStorage.removeItem('expenseData');
+                
+                // 기본 멤버로 초기화
+                currentMembers = ['효선', '기현', '영휘', '사강'];
+                updateMemberUI();
+                updateTableStructure();
+                
+                // 모든 데이터 행 제거
+                const tbody = document.querySelector('#expenseTable tbody');
+                const existingRows = tbody.querySelectorAll('tr:not(:last-child)');
+                existingRows.forEach(row => row.remove());
+                
+                updateSummary();
+                
+                alert('모든 데이터가 초기화되었습니다.');
+            } catch (error) {
+                console.error('데이터 초기화 중 오류:', error);
+                alert('데이터 초기화 중 오류가 발생했습니다.');
+            }
+        }
+    </script>
+</body>
+</html>
