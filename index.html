@@ -50,6 +50,27 @@
         .people-col { width: 150px; }
         .split-col { width: 70px; font-family: monospace; }
         
+        /* 분담금 셀 내부 체크박스 스타일 */
+        .split-payment {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 2px;
+            font-size: 11px;
+        }
+        .split-payment input[type="checkbox"] {
+            transform: scale(0.8);
+            margin: 0;
+        }
+        .split-payment .amount {
+            font-size: 10px;
+            line-height: 1;
+        }
+        .payment-completed {
+            background-color: #d1fae5 !important;
+            color: #065f46 !important;
+        }
+        
         /* 인원 체크박스 스타일 */
         .checkbox-group {
             display: flex;
@@ -203,146 +224,7 @@
                 </tr>
             </thead>
             <tbody>
-                <tr>
-                    <td class="date-col">
-                        <input type="text" value="06/23" placeholder="MM/DD">
-                    </td>
-                    <td class="place-col">
-                        <input type="text" value="퍼듀 다이닝 코트" placeholder="장소">
-                    </td>
-                    <td class="detail-col">
-                        <input type="text" value="점심" placeholder="내역">
-                    </td>
-                    <td class="amount-col total-amount">
-                        <input type="number" value="13.44" step="0.01" onchange="calculateSplit(this)">
-                    </td>
-                    <td class="payer-col">
-                        <select>
-                            <option value="효선" selected>효선</option>
-                            <option value="기현">기현</option>
-                            <option value="영휘">영휘</option>
-                            <option value="사강">사강</option>
-                        </select>
-                    </td>
-                    <td class="people-col">
-                        <div class="checkbox-group">
-                            <div class="checkbox-item">
-                                <input type="checkbox" id="h1" checked onchange="calculateSplit(this)">
-                                <label for="h1">효선</label>
-                            </div>
-                            <div class="checkbox-item">
-                                <input type="checkbox" id="g1" onchange="calculateSplit(this)">
-                                <label for="g1">기현</label>
-                            </div>
-                            <div class="checkbox-item">
-                                <input type="checkbox" id="y1" onchange="calculateSplit(this)">
-                                <label for="y1">영휘</label>
-                            </div>
-                            <div class="checkbox-item">
-                                <input type="checkbox" id="s1" onchange="calculateSplit(this)">
-                                <label for="s1">사강</label>
-                            </div>
-                        </div>
-                    </td>
-                    <td class="split-col hyoseon equal-split" id="hyoseon1">$13.44</td>
-                    <td class="split-col gihyeon" id="gihyeon1">-</td>
-                    <td class="split-col younghui" id="younghui1">-</td>
-                    <td class="split-col sakang" id="sakang1">-</td>
-                </tr>
-                
-                <tr>
-                    <td class="date-col">
-                        <input type="text" value="06/23" placeholder="MM/DD">
-                    </td>
-                    <td class="place-col">
-                        <input type="text" value="타겟" placeholder="장소">
-                    </td>
-                    <td class="detail-col">
-                        <input type="text" value="쇼핑" placeholder="내역">
-                    </td>
-                    <td class="amount-col total-amount">
-                        <input type="number" value="27.89" step="0.01" onchange="calculateSplit(this)">
-                    </td>
-                    <td class="payer-col">
-                        <select>
-                            <option value="효선" selected>효선</option>
-                            <option value="기현">기현</option>
-                            <option value="영휘">영휘</option>
-                            <option value="사강">사강</option>
-                        </select>
-                    </td>
-                    <td class="people-col">
-                        <div class="checkbox-group">
-                            <div class="checkbox-item">
-                                <input type="checkbox" id="h2" checked onchange="calculateSplit(this)">
-                                <label for="h2">효선</label>
-                            </div>
-                            <div class="checkbox-item">
-                                <input type="checkbox" id="g2" checked onchange="calculateSplit(this)">
-                                <label for="g2">기현</label>
-                            </div>
-                            <div class="checkbox-item">
-                                <input type="checkbox" id="y2" onchange="calculateSplit(this)">
-                                <label for="y2">영휘</label>
-                            </div>
-                            <div class="checkbox-item">
-                                <input type="checkbox" id="s2" onchange="calculateSplit(this)">
-                                <label for="s2">사강</label>
-                            </div>
-                        </div>
-                    </td>
-                    <td class="split-col hyoseon equal-split" id="hyoseon2">$13.95</td>
-                    <td class="split-col gihyeon equal-split" id="gihyeon2">$13.95</td>
-                    <td class="split-col younghui" id="younghui2">-</td>
-                    <td class="split-col sakang" id="sakang2">-</td>
-                </tr>
-                
-                <tr>
-                    <td class="date-col">
-                        <input type="text" value="06/24" placeholder="MM/DD">
-                    </td>
-                    <td class="place-col">
-                        <input type="text" value="판다 익스프레스" placeholder="장소">
-                    </td>
-                    <td class="detail-col">
-                        <input type="text" value="점심" placeholder="내역">
-                    </td>
-                    <td class="amount-col total-amount">
-                        <input type="number" value="12.52" step="0.01" onchange="calculateSplit(this)">
-                    </td>
-                    <td class="payer-col">
-                        <select>
-                            <option value="효선" selected>효선</option>
-                            <option value="기현">기현</option>
-                            <option value="영휘">영휘</option>
-                            <option value="사강">사강</option>
-                        </select>
-                    </td>
-                    <td class="people-col">
-                        <div class="checkbox-group">
-                            <div class="checkbox-item">
-                                <input type="checkbox" id="h3" checked onchange="calculateSplit(this)">
-                                <label for="h3">효선</label>
-                            </div>
-                            <div class="checkbox-item">
-                                <input type="checkbox" id="g3" checked onchange="calculateSplit(this)">
-                                <label for="g3">기현</label>
-                            </div>
-                            <div class="checkbox-item">
-                                <input type="checkbox" id="y3" onchange="calculateSplit(this)">
-                                <label for="y3">영휘</label>
-                            </div>
-                            <div class="checkbox-item">
-                                <input type="checkbox" id="s3" onchange="calculateSplit(this)">
-                                <label for="s3">사강</label>
-                            </div>
-                        </div>
-                    </td>
-                    <td class="split-col hyoseon equal-split" id="hyoseon3">$6.26</td>
-                    <td class="split-col gihyeon equal-split" id="gihyeon3">$6.26</td>
-                    <td class="split-col younghui" id="younghui3">-</td>
-                    <td class="split-col sakang" id="sakang3">-</td>
-                </tr>
+                <!-- 항목(지출 행)들은 JS로 동적으로 추가됩니다. -->
                 
                 <!-- 새 행 추가 버튼용 빈 행 -->
                 <tr>
@@ -378,16 +260,36 @@
                 </div>
             </div>
             
-            <div style="margin-top: 15px; padding: 10px; background: white; border-radius: 6px;">
+            <div style="margin-top: 15px; padding: 10px; background: white; border-radius: 6px; display: flex; align-items: center; gap: 10px;">
                 <strong>💸 정산 결과:</strong>
-                <div id="finalSettlement" style="margin-top: 5px; font-family: monospace;">
+                <div id="finalSettlement" style="margin-top: 0; font-family: monospace; flex:1;">
                     기현이 효선에게 $20.21 줘야 함
                 </div>
+                <button id="clearSettlementBtn" style="background: #f87171; color: white; border: none; padding: 5px 12px; border-radius: 4px; cursor: pointer; font-size: 13px;">정산내역 지우기</button>
             </div>
         </div>
     </div>
 
     <script>
+        // 정산내역(결과) 지우기 버튼 기능
+        document.addEventListener('DOMContentLoaded', function() {
+            const clearBtn = document.getElementById('clearSettlementBtn');
+            if (clearBtn) {
+                clearBtn.addEventListener('click', function() {
+                    document.getElementById('finalSettlement').innerHTML = '';
+                });
+            }
+        });
+
+        // 지출 행 삭제 함수 (전역 등록)
+        window.removeExpenseRow = function(btn) {
+            const row = btn.closest('tr');
+            if (row) {
+                row.remove();
+                updateSummary();
+                saveData(true);
+            }
+        }
         // 전역 변수로 현재 멤버 목록 관리
         let currentMembers = ['효선', '기현', '영휘', '사강'];
         
@@ -494,17 +396,16 @@
                 });
                 
                 peopleCell.innerHTML = '';
-                
-                currentMembers.forEach((member, index) => {
-                    const checkboxItem = document.createElement('div');
-                    checkboxItem.className = 'checkbox-item';
-                    const isChecked = existingChecked.includes(member) ? 'checked' : '';
-                    checkboxItem.innerHTML = `
-                        <input type="checkbox" id="${member.toLowerCase().charAt(0)}${rowIndex}" ${isChecked} onchange="calculateSplit(this)">
-                        <label for="${member.toLowerCase().charAt(0)}${rowIndex}">${member}</label>
-                    `;
-                    peopleCell.appendChild(checkboxItem);
-                });
+                     currentMembers.forEach((member, index) => {
+                const checkboxItem = document.createElement('div');
+                checkboxItem.className = 'checkbox-item';
+                const isChecked = existingChecked.includes(member) ? 'checked' : '';
+                checkboxItem.innerHTML = `
+                    <input type="checkbox" id="${member.toLowerCase().replace(/[^a-z0-9]/g, '_')}_${rowIndex}" ${isChecked} onchange="calculateSplit(this)">
+                    <label for="${member.toLowerCase().replace(/[^a-z0-9]/g, '_')}_${rowIndex}">${member}</label>
+                `;
+                peopleCell.appendChild(checkboxItem);
+            });
             }
             
             // 결제자 셀렉트 옵션 업데이트
@@ -589,19 +490,31 @@
             
             const splitAmount = participantCount > 0 ? (totalAmount / participantCount) : 0;
             
+            // 디버깅: 분할 계산 과정 출력
+            console.log(`행 ${rowIndex}: 총액=$${totalAmount}, 참가자=${participants.join(',')}, 1인당=$${splitAmount.toFixed(2)}`);
+            
             // 개별 분담금 업데이트
             currentMembers.forEach((member, index) => {
                 const cell = document.getElementById(member.toLowerCase() + rowIndex);
                 if (cell) {
                     if (checkboxes[index] && checkboxes[index].checked && participantCount > 0) {
-                        cell.textContent = '$' + splitAmount.toFixed(2);
+                        // 체크박스와 금액을 함께 표시
+                        const checkboxId = `payment_${member.toLowerCase()}_${rowIndex}`;
+                        cell.innerHTML = `
+                            <div class="split-payment">
+                                <input type="checkbox" id="${checkboxId}" onchange="togglePaymentStatus(this)" title="송금 완료 체크">
+                                <div class="amount">$${splitAmount.toFixed(2)}</div>
+                            </div>
+                        `;
                         cell.classList.add('equal-split');
+                        console.log(`  ${member}: $${splitAmount.toFixed(2)} (참여)`);
                     } else {
-                        cell.textContent = '-';
-                        cell.classList.remove('equal-split');
+                        cell.innerHTML = '-';
+                        cell.classList.remove('equal-split', 'payment-completed');
+                        console.log(`  ${member}: - (미참여)`);
                     }
                 }
-            });``
+            });
             
             updateSummary();
         }
@@ -615,21 +528,49 @@
                 totals[member.toLowerCase()] = 0;
             });
             
+            // 각 항목별 정산 정보 저장
+            let itemSettlements = [];
+            
             rows.forEach((row, index) => {
                 if (index >= rows.length - 1) return; // 마지막 추가 버튼 행 제외
                 
                 const totalInput = row.querySelector('input[type="number"]');
-                if (totalInput) {
-                    totals.total += parseFloat(totalInput.value) || 0;
-                }
+                const payerSelect = row.querySelector('.payer-col select');
+                const checkboxes = row.querySelectorAll('input[type="checkbox"]');
                 
-                currentMembers.forEach(member => {
-                    const cell = document.getElementById(member.toLowerCase() + (index + 1));
-                    if (cell && cell.textContent !== '-') {
-                        const amount = parseFloat(cell.textContent.replace('$', '')) || 0;
-                        totals[member.toLowerCase()] += amount;
+                if (!totalInput || !payerSelect) return;
+                
+                const amount = parseFloat(totalInput.value) || 0;
+                const payer = payerSelect.value;
+                
+                if (amount > 0) {
+                    totals.total += amount;
+                    
+                    // 이 항목의 참여자들 찾기
+                    let participants = [];
+                    checkboxes.forEach((checkbox, i) => {
+                        if (checkbox.checked && currentMembers[i]) {
+                            participants.push(currentMembers[i]);
+                        }
+                    });
+                    
+                    if (participants.length > 0) {
+                        const splitAmount = amount / participants.length;
+                        
+                        // 각 참여자의 분담금 합계에 추가
+                        participants.forEach(participant => {
+                            totals[participant.toLowerCase()] += splitAmount;
+                        });
+                        
+                        // 이 항목의 정산 정보 저장
+                        itemSettlements.push({
+                            amount: amount,
+                            payer: payer,
+                            participants: participants,
+                            splitAmount: splitAmount
+                        });
                     }
-                });
+                }
             });
             
             // 요약 업데이트
@@ -642,25 +583,100 @@
                 }
             });
             
-            // 최종 정산 계산 (첫 번째 멤버가 주로 결제했다고 가정)
-            let finalText = '정산 완료';
-            if (currentMembers.length > 1) {
-                const calculations = [];
-                const firstMember = currentMembers[0];
+            // 각 항목별로 독립적인 정산 계산
+            let allResults = [];
+            const threshold = 0.01;
+            
+            itemSettlements.forEach((item, itemIndex) => {
+                console.log(`=== 항목 ${itemIndex + 1} 정산 ===`);
+                console.log(`금액: $${item.amount}, 결제자: ${item.payer}, 참여자: ${item.participants.join(', ')}, 1인당: $${item.splitAmount.toFixed(2)}`);
                 
-                for (let i = 1; i < currentMembers.length; i++) {
-                    const member = currentMembers[i];
-                    const owes = totals[member.toLowerCase()];
-                    if (owes > 0) {
-                        calculations.push(`${member}이 ${firstMember}에게 $${owes.toFixed(2)} 줘야 함`);
+                // 이 항목에서의 각 참여자별 정산액 계산
+                let itemSettlement = {};
+                item.participants.forEach(participant => {
+                    if (participant === item.payer) {
+                        // 결제자: 실제 낸 금액 - 분담금
+                        itemSettlement[participant] = item.amount - item.splitAmount;
+                    } else {
+                        // 다른 참여자: 0 - 분담금 (줄 금액)
+                        itemSettlement[participant] = 0 - item.splitAmount;
+                    }
+                });
+                
+                console.log('항목별 정산액:', itemSettlement);
+                
+                // 이 항목에서 받을 사람과 줄 사람 분리
+                let receivers = [], givers = [];
+                item.participants.forEach(participant => {
+                    if (itemSettlement[participant] > threshold) {
+                        receivers.push({member: participant, amount: itemSettlement[participant]});
+                    } else if (itemSettlement[participant] < -threshold) {
+                        givers.push({member: participant, amount: -itemSettlement[participant]});
+                    }
+                });
+                
+                // 이 항목에서의 송금 내역 계산
+                for (let g = 0; g < givers.length; g++) {
+                    let give = givers[g];
+                    for (let r = 0; r < receivers.length && give.amount > threshold; r++) {
+                        let recv = receivers[r];
+                        if (recv.amount > threshold) {
+                            let transferAmount = Math.min(give.amount, recv.amount);
+                            allResults.push(`${give.member} -> ${recv.member}에게 $${transferAmount.toFixed(2)}`);
+                            give.amount -= transferAmount;
+                            recv.amount -= transferAmount;
+                        }
                     }
                 }
-                
-                if (calculations.length > 0) {
-                    finalText = calculations.join('<br>');
-                }
-            }
+                console.log('========================');
+            });
             
+            // 상쇄 계산: 서로 주고받을 금액이 있으면 차감
+            let netTransfers = {};
+            
+            // 모든 송금 내역을 파싱해서 net 금액 계산
+            allResults.forEach(result => {
+                // "A -> B에게 $X" 형태 파싱
+                const match = result.match(/(.+) -> (.+)에게 \$([0-9.]+)/);
+                if (match) {
+                    const [, giver, receiver, amount] = match;
+                    const transferAmount = parseFloat(amount);
+                    
+                    // A -> B 방향으로 net 금액 계산
+                    const key1 = `${giver}->${receiver}`;
+                    const key2 = `${receiver}->${giver}`;
+                    
+                    if (netTransfers[key1]) {
+                        netTransfers[key1] += transferAmount;
+                    } else if (netTransfers[key2]) {
+                        netTransfers[key2] -= transferAmount;
+                    } else {
+                        netTransfers[key1] = transferAmount;
+                    }
+                }
+            });
+            
+            // 최종 상쇄된 결과 생성
+            let finalResults = [];
+            Object.keys(netTransfers).forEach(key => {
+                const amount = netTransfers[key];
+                if (Math.abs(amount) > threshold) {
+                    const [giver, receiver] = key.split('->');
+                    if (amount > 0) {
+                        finalResults.push(`${giver} -> ${receiver}에게 $${amount.toFixed(2)}`);
+                    } else {
+                        finalResults.push(`${receiver} -> ${giver}에게 $${Math.abs(amount).toFixed(2)}`);
+                    }
+                }
+            });
+            
+            console.log('=== 상쇄 전 송금 내역 ===');
+            console.log(allResults);
+            console.log('=== 상쇄 후 최종 송금 내역 ===');
+            console.log(finalResults);
+            
+            // 최종 정산 결과 표시
+            let finalText = finalResults.length > 0 ? finalResults.join('<br>') : '정산 완료';
             document.getElementById('finalSettlement').innerHTML = finalText;
         }
         
@@ -702,8 +718,8 @@
             currentMembers.forEach((member, index) => {
                 rowHTML += `
                         <div class="checkbox-item">
-                            <input type="checkbox" id="${member.toLowerCase().charAt(0)}${newRowIndex}" onchange="calculateSplit(this)">
-                            <label for="${member.toLowerCase().charAt(0)}${newRowIndex}">${member}</label>
+                            <input type="checkbox" id="${member.toLowerCase().replace(/[^a-z0-9]/g, '_')}_${newRowIndex}" onchange="calculateSplit(this)">
+                            <label for="${member.toLowerCase().replace(/[^a-z0-9]/g, '_')}_${newRowIndex}">${member}</label>
                         </div>
                 `;
             });
@@ -717,9 +733,10 @@
             currentMembers.forEach(member => {
                 rowHTML += `<td class="split-col ${member.toLowerCase()}" id="${member.toLowerCase()}${newRowIndex}">-</td>`;
             });
-            
+            // 삭제 버튼 셀 추가 (width 최소화)
+            rowHTML += `<td style="width:36px;"><button onclick="removeExpenseRow(this)" style="background:#f87171;color:white;border:none;padding:2px 6px;border-radius:4px;cursor:pointer;font-size:15px;width:26px;min-width:0;">🗑️</button></td>`;
+
             newRow.innerHTML = rowHTML;
-            
             // 마지막 버튼 행 앞에 삽입
             tbody.insertBefore(newRow, tbody.lastElementChild);
         }
@@ -896,8 +913,8 @@
                 const checked = expense.participants && expense.participants.includes(member) ? 'checked' : '';
                 rowHTML += `
                         <div class="checkbox-item">
-                            <input type="checkbox" id="${member.toLowerCase().charAt(0)}${rowIndex}" ${checked} onchange="calculateSplit(this)">
-                            <label for="${member.toLowerCase().charAt(0)}${rowIndex}">${member}</label>
+                            <input type="checkbox" id="${member.toLowerCase().replace(/[^a-z0-9]/g, '_')}_${rowIndex}" ${checked} onchange="calculateSplit(this)">
+                            <label for="${member.toLowerCase().replace(/[^a-z0-9]/g, '_')}_${rowIndex}">${member}</label>
                         </div>
                 `;
             });
@@ -911,9 +928,10 @@
             currentMembers.forEach(member => {
                 rowHTML += `<td class="split-col ${member.toLowerCase()}" id="${member.toLowerCase()}${rowIndex}">-</td>`;
             });
-            
+            // 삭제 버튼 셀 추가 (width 최소화)
+            rowHTML += `<td style="width:36px;"><button onclick="removeExpenseRow(this)" style="background:#f87171;color:white;border:none;padding:2px 6px;border-radius:4px;cursor:pointer;font-size:15px;width:26px;min-width:0;">🗑️</button></td>`;
+
             newRow.innerHTML = rowHTML;
-            
             // 분할 계산 실행
             setTimeout(() => {
                 const amountInput = newRow.querySelector('input[type="number"]');
@@ -921,7 +939,6 @@
                     calculateSplit(amountInput);
                 }
             }, 10);
-            
             return newRow;
         }
         
@@ -1017,6 +1034,18 @@
                 console.error('데이터 초기화 중 오류:', error);
                 alert('데이터 초기화 중 오류가 발생했습니다.');
             }
+        }
+        
+        // 송금 완료 상태 토글 함수
+        window.togglePaymentStatus = function(checkbox) {
+            const cell = checkbox.closest('td');
+            if (checkbox.checked) {
+                cell.classList.add('payment-completed');
+            } else {
+                cell.classList.remove('payment-completed');
+            }
+            // 자동 저장
+            saveData(true);
         }
     </script>
 </body>
