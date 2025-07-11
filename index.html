@@ -498,15 +498,25 @@
                 const cell = document.getElementById(member.toLowerCase() + rowIndex);
                 if (cell) {
                     if (checkboxes[index] && checkboxes[index].checked && participantCount > 0) {
-                        // 체크박스와 금액을 함께 표시
+                        // 기존 체크박스 상태 확인
                         const checkboxId = `payment_${member.toLowerCase()}_${rowIndex}`;
+                        const existingCheckbox = document.getElementById(checkboxId);
+                        const wasChecked = existingCheckbox ? existingCheckbox.checked : false;
+                        
+                        // 체크박스와 금액을 함께 표시
                         cell.innerHTML = `
                             <div class="split-payment">
-                                <input type="checkbox" id="${checkboxId}" onchange="togglePaymentStatus(this)" title="송금 완료 체크">
+                                <input type="checkbox" id="${checkboxId}" onchange="togglePaymentStatus(this)" title="송금 완료 체크" ${wasChecked ? 'checked' : ''}>
                                 <div class="amount">$${splitAmount.toFixed(2)}</div>
                             </div>
                         `;
                         cell.classList.add('equal-split');
+                        
+                        // 체크된 상태였다면 payment-completed 클래스도 추가
+                        if (wasChecked) {
+                            cell.classList.add('payment-completed');
+                        }
+                        
                         console.log(`  ${member}: $${splitAmount.toFixed(2)} (참여)`);
                     } else {
                         cell.innerHTML = '-';
@@ -803,9 +813,20 @@
                     }
                     
                     const participants = [];
+                    const paymentStatus = {}; // 분담금 체크박스 상태 저장
+                    
+                    // 참여 인원 체크박스 처리
                     checkboxes.forEach((checkbox, i) => {
                         if (checkbox.checked && currentMembers[i]) {
                             participants.push(currentMembers[i]);
+                        }
+                    });
+                    
+                    // 분담금 체크박스 상태 수집
+                    currentMembers.forEach(member => {
+                        const paymentCheckbox = row.querySelector(`input[id^="payment_${member.toLowerCase()}_"]`);
+                        if (paymentCheckbox) {
+                            paymentStatus[member] = paymentCheckbox.checked;
                         }
                     });
                     
@@ -815,7 +836,8 @@
                         detail: detailInput.value,
                         amount: parseFloat(amountInput.value) || 0,
                         payer: payerSelect.value,
-                        participants: participants
+                        participants: participants,
+                        paymentStatus: paymentStatus
                     });
                 });
                 
@@ -932,11 +954,28 @@
             rowHTML += `<td style="width:36px;"><button onclick="removeExpenseRow(this)" style="background:#f87171;color:white;border:none;padding:2px 6px;border-radius:4px;cursor:pointer;font-size:15px;width:26px;min-width:0;">🗑️</button></td>`;
 
             newRow.innerHTML = rowHTML;
+            
             // 분할 계산 실행
             setTimeout(() => {
                 const amountInput = newRow.querySelector('input[type="number"]');
                 if (amountInput) {
                     calculateSplit(amountInput);
+                    
+                    // 저장된 분담금 체크박스 상태 복원
+                    if (expense.paymentStatus) {
+                        currentMembers.forEach(member => {
+                            if (expense.paymentStatus[member]) {
+                                const paymentCheckbox = newRow.querySelector(`input[id^="payment_${member.toLowerCase()}_"]`);
+                                if (paymentCheckbox) {
+                                    paymentCheckbox.checked = true;
+                                    const cell = paymentCheckbox.closest('td');
+                                    if (cell) {
+                                        cell.classList.add('payment-completed');
+                                    }
+                                }
+                            }
+                        });
+                    }
                 }
             }, 10);
             return newRow;
