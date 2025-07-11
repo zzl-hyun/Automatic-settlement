@@ -790,9 +790,10 @@
         function saveData(isAutoSave = false) {
             try {
                 const data = {
-                    members: currentMembers,
+                    members: [...currentMembers], // 배열 복사
                     expenses: [],
-                    lastSaved: new Date().toISOString()
+                    lastSaved: new Date().toISOString(),
+                    version: "1.0" // 버전 정보 추가
                 };
                 
                 // 모든 행의 데이터 수집
@@ -807,17 +808,18 @@
                     const payerSelect = row.querySelector('.payer-col select');
                     const checkboxes = row.querySelectorAll('input[type="checkbox"]');
                     
-                    // 빈 행은 저장하지 않음
-                    if (!dateInput.value && !placeInput.value && !detailInput.value && !amountInput.value) {
+                    // 모든 필드가 비어있는 행은 저장하지 않음
+                    if (!dateInput?.value && !placeInput?.value && !detailInput?.value && !amountInput?.value) {
                         return;
                     }
                     
                     const participants = [];
                     const paymentStatus = {}; // 분담금 체크박스 상태 저장
                     
-                    // 참여 인원 체크박스 처리
+                    // 참여 인원 체크박스 처리 (인원 참여 체크박스만)
                     checkboxes.forEach((checkbox, i) => {
-                        if (checkbox.checked && currentMembers[i]) {
+                        // payment_ 로 시작하지 않는 체크박스만 인원 참여용
+                        if (!checkbox.id.startsWith('payment_') && checkbox.checked && currentMembers[i]) {
                             participants.push(currentMembers[i]);
                         }
                     });
@@ -831,11 +833,11 @@
                     });
                     
                     data.expenses.push({
-                        date: dateInput.value,
-                        place: placeInput.value,
-                        detail: detailInput.value,
-                        amount: parseFloat(amountInput.value) || 0,
-                        payer: payerSelect.value,
+                        date: dateInput?.value || '',
+                        place: placeInput?.value || '',
+                        detail: detailInput?.value || '',
+                        amount: parseFloat(amountInput?.value) || 0,
+                        payer: payerSelect?.value || currentMembers[0],
                         participants: participants,
                         paymentStatus: paymentStatus
                     });
@@ -844,13 +846,16 @@
                 localStorage.setItem('expenseData', JSON.stringify(data));
                 
                 if (!isAutoSave) {
-                    alert('데이터가 저장되었습니다!');
+                    alert(`데이터가 저장되었습니다!\n- 인원: ${data.members.length}명\n- 지출 항목: ${data.expenses.length}개`);
                 }
+                
+                return true; // 저장 성공
             } catch (error) {
                 console.error('데이터 저장 중 오류:', error);
                 if (!isAutoSave) {
-                    alert('데이터 저장 중 오류가 발생했습니다.');
+                    alert('데이터 저장 중 오류가 발생했습니다: ' + error.message);
                 }
+                return false; // 저장 실패
             }
         }
         
@@ -859,15 +864,22 @@
             try {
                 const savedData = localStorage.getItem('expenseData');
                 if (!savedData) {
+                    console.log('저장된 데이터가 없습니다. 기본 상태로 시작합니다.');
                     updateSummary(); // 저장된 데이터가 없으면 기본 요약만 업데이트
                     return;
                 }
                 
                 const data = JSON.parse(savedData);
                 
+                // 데이터 유효성 검사
+                if (!data.members || !Array.isArray(data.members)) {
+                    console.error('저장된 데이터가 손상되었습니다.');
+                    return;
+                }
+                
                 // 멤버 목록 복원
-                if (data.members && data.members.length > 0) {
-                    currentMembers = data.members;
+                if (data.members.length > 0) {
+                    currentMembers = [...data.members]; // 배열 복사
                     updateMemberUI();
                     updateTableStructure();
                 }
@@ -878,10 +890,14 @@
                 existingRows.forEach(row => row.remove());
                 
                 // 저장된 지출 내역 복원
-                if (data.expenses && data.expenses.length > 0) {
+                if (data.expenses && Array.isArray(data.expenses) && data.expenses.length > 0) {
                     data.expenses.forEach((expense, index) => {
-                        const newRow = createExpenseRow(index + 1, expense);
-                        tbody.insertBefore(newRow, tbody.lastElementChild);
+                        try {
+                            const newRow = createExpenseRow(index + 1, expense);
+                            tbody.insertBefore(newRow, tbody.lastElementChild);
+                        } catch (error) {
+                            console.error(`지출 항목 ${index + 1} 로드 중 오류:`, error);
+                        }
                     });
                 }
                 
@@ -892,9 +908,13 @@
                     console.log('마지막 저장:', lastSaved.toLocaleString('ko-KR'));
                 }
                 
+                console.log(`데이터 로드 완료: 인원 ${data.members.length}명, 지출 항목 ${data.expenses?.length || 0}개`);
+                
             } catch (error) {
                 console.error('데이터 불러오기 중 오류:', error);
-                alert('데이터 불러오기 중 오류가 발생했습니다.');
+                alert('저장된 데이터를 불러오는 중 오류가 발생했습니다. 기본 상태로 시작합니다.');
+                // 오류 발생 시 localStorage 정리
+                localStorage.removeItem('expenseData');
             }
         }
         
@@ -984,13 +1004,25 @@
         // 데이터 내보내기 함수
         function exportData() {
             try {
+                // 현재 화면의 데이터를 먼저 저장
+                saveData(true);
+                
                 const savedData = localStorage.getItem('expenseData');
                 if (!savedData) {
-                    alert('저장된 데이터가 없습니다.');
+                    alert('내보낼 데이터가 없습니다.');
                     return;
                 }
                 
                 const data = JSON.parse(savedData);
+                
+                // 내보내기 확인 메시지
+                const memberCount = data.members ? data.members.length : 0;
+                const expenseCount = data.expenses ? data.expenses.length : 0;
+                
+                if (!confirm(`다음 데이터를 내보내시겠습니까?\n- 인원: ${memberCount}명\n- 지출 항목: ${expenseCount}개`)) {
+                    return;
+                }
+                
                 const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
                 const url = URL.createObjectURL(blob);
                 
@@ -1019,6 +1051,13 @@
             const file = event.target.files[0];
             if (!file) return;
             
+            // 파일 형식 확인
+            if (!file.name.endsWith('.json')) {
+                alert('JSON 파일만 가져올 수 있습니다.');
+                event.target.value = '';
+                return;
+            }
+            
             const reader = new FileReader();
             reader.onload = function(e) {
                 try {
@@ -1026,7 +1065,20 @@
                     
                     // 데이터 유효성 검사
                     if (!data.members || !Array.isArray(data.members)) {
-                        throw new Error('올바르지 않은 데이터 형식입니다.');
+                        throw new Error('올바르지 않은 데이터 형식입니다. (members 배열이 없음)');
+                    }
+                    
+                    if (!data.expenses || !Array.isArray(data.expenses)) {
+                        throw new Error('올바르지 않은 데이터 형식입니다. (expenses 배열이 없음)');
+                    }
+                    
+                    // 가져오기 확인 메시지
+                    const memberCount = data.members.length;
+                    const expenseCount = data.expenses.length;
+                    
+                    if (!confirm(`다음 데이터를 가져오시겠습니까?\n- 인원: ${memberCount}명 (${data.members.join(', ')})\n- 지출 항목: ${expenseCount}개\n\n⚠️ 현재 데이터는 모두 덮어쓰여집니다!`)) {
+                        event.target.value = '';
+                        return;
                     }
                     
                     // localStorage에 저장
@@ -1035,12 +1087,23 @@
                     // 데이터 불러오기
                     loadData();
                     
-                    alert('데이터를 성공적으로 가져왔습니다!');
+                    alert(`데이터를 성공적으로 가져왔습니다!\n- 인원: ${memberCount}명\n- 지출 항목: ${expenseCount}개`);
                 } catch (error) {
                     console.error('파일 가져오기 중 오류:', error);
-                    alert('파일 형식이 올바르지 않습니다.');
+                    let errorMessage = '파일 형식이 올바르지 않습니다.';
+                    if (error.message.includes('JSON')) {
+                        errorMessage = 'JSON 파일 형식이 잘못되었습니다.';
+                    } else if (error.message.includes('members') || error.message.includes('expenses')) {
+                        errorMessage = error.message;
+                    }
+                    alert(errorMessage);
                 }
             };
+            
+            reader.onerror = function() {
+                alert('파일을 읽는 중 오류가 발생했습니다.');
+            };
+            
             reader.readAsText(file);
             
             // 파일 입력 초기화
